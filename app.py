@@ -5,16 +5,16 @@ import os
 
 def create_sales_views(conn):
     """
-    제공된 로직을 바탕으로 DB 내에 2개의 View를 생성합니다.
+    기존 로직에서 '기준월'을 '매출연월'로 변경하여 View를 생성합니다.
     """
     cursor = conn.cursor()
 
-    # 1. 판매계획 전처리 (매출리스트 컬럼명에 맞춤)
+    # 1. 판매계획 전처리 (기준월 -> 매출연월 변경)
     cursor.execute("DROP VIEW IF EXISTS view_cleaned_plan")
     cursor.execute("""
         CREATE VIEW view_cleaned_plan AS
         SELECT 
-            strftime('%Y-%m', 계획년월) AS 기준월,
+            strftime('%Y-%m', 계획년월) AS 매출연월,
             매출처명,
             품명 AS 품목명,
             판매수량 AS 수량,
@@ -22,13 +22,12 @@ def create_sales_views(conn):
         FROM sales_plan_data
     """)
 
-    # 2. 매출리스트 전처리 (필요한 컬럼만 선별)
-    # 수정한 점: '품목명' 뒤에 누락되었던 콤마(,) 추가 반영
+    # 2. 매출리스트 전처리 (기준월 -> 매출연월 변경)
     cursor.execute("DROP VIEW IF EXISTS view_cleaned_actual")
     cursor.execute("""
         CREATE VIEW view_cleaned_actual AS
         SELECT 
-            strftime('%Y-%m', 매출일) AS 기준월,
+            strftime('%Y-%m', 매출일) AS 매출연월,
             매출처명,
             품목명,
             수량,
@@ -59,7 +58,7 @@ def main():
             # View 생성 실행 버튼
             if st.sidebar.button("전처리 View 생성/업데이트"):
                 create_sales_views(conn)
-                st.sidebar.success("✅ View 생성 완료!")
+                st.sidebar.success("✅ View 생성 완료 (컬럼명: 매출연월)")
 
             # 생성된 View 데이터 확인
             st.subheader("📋 생성된 View 데이터 확인")
@@ -72,7 +71,7 @@ def main():
                     df_plan = pd.read_sql_query("SELECT * FROM view_cleaned_plan LIMIT 10", conn)
                     st.dataframe(df_plan, use_container_width=True)
                 except Exception:
-                    st.warning("판매계획 View가 아직 생성되지 않았거나 원본 테이블이 없습니다.")
+                    st.warning("판매계획 View가 생성되지 않았거나 원본 테이블이 없습니다.")
 
             with col2:
                 st.markdown("#### 2. 실적리스트 (view_cleaned_actual)")
@@ -80,7 +79,7 @@ def main():
                     df_actual = pd.read_sql_query("SELECT * FROM view_cleaned_actual LIMIT 10", conn)
                     st.dataframe(df_actual, use_container_width=True)
                 except Exception:
-                    st.warning("실적리스트 View가 아직 생성되지 않았거나 원본 테이블이 없습니다.")
+                    st.warning("실적리스트 View가 생성되지 않았거나 원본 테이블이 없습니다.")
             
             conn.close()
 
