@@ -1,15 +1,12 @@
 import streamlit as st
 import sqlite3
-import pandas as pd
 import os
-# database.py에서 함수 불러오기
-from database import create_integrated_sales_view
+from database import create_integrated_sales_view, get_view_data
 
 def main():
     st.set_page_config(page_title="Sales Data Integrator", layout="wide")
-    st.title("📊 판매 데이터 표준화 통합 뷰")
+    st.title("📊 컬럼 리스트 기반 데이터 통합")
 
-    # 1. 사이드바에서 DB 파일 업로드
     st.sidebar.header("데이터 업로드")
     uploaded_file = st.sidebar.file_uploader("SQLite DB 파일을 업로드하세요", type=["db", "sqlite", "sqlite3"])
 
@@ -21,25 +18,23 @@ def main():
         try:
             conn = sqlite3.connect(temp_db_path)
             
-            # 분리된 파일의 함수 호출
+            # 1. View 생성 (리스트 기반 로직 실행)
             create_integrated_sales_view(conn)
             st.sidebar.success("✅ 통합 View 생성 완료")
 
+            # 2. 데이터 가져오기 및 출력
             st.subheader("📋 통합 판매 데이터 (view_integrated_sales)")
+            df = get_view_data(conn)
             
-            try:
-                df_integrated = pd.read_sql_query("SELECT * FROM view_integrated_sales", conn)
-                if not df_integrated.empty:
-                    st.dataframe(df_integrated, use_container_width=True)
-                    st.write(f"총 데이터: {len(df_integrated)} 건")
-                else:
-                    st.info("데이터가 존재하지 않습니다.")
-            except Exception as e:
-                st.warning(f"View 조회 오류: {e}")
+            if not df.empty:
+                st.dataframe(df, use_container_width=True)
+                st.write(f"총 데이터: {len(df)} 건")
+            else:
+                st.info("데이터가 존재하지 않습니다.")
             
             conn.close()
         except Exception as e:
-            st.error(f"DB 연결 오류: {e}")
+            st.error(f"오류 발생: {e}")
     else:
         st.info("사이드바에서 DB 파일을 업로드해주세요.")
 
