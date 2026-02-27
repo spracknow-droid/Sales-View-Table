@@ -5,7 +5,7 @@ from database import create_integrated_sales_view, get_view_data
 
 def main():
     st.set_page_config(page_title="Sales Data Integrator", layout="wide")
-    st.title("판매 데이터 통합 View Table")
+    st.title("판매 데이터 통합 View")
 
     st.sidebar.header("데이터 업로드")
     uploaded_file = st.sidebar.file_uploader("SQLite DB 파일을 업로드하세요", type=["db", "sqlite", "sqlite3"])
