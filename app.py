@@ -9,7 +9,8 @@ from utils import convert_df_to_excel
 
 def main():
     st.set_page_config(page_title="Sales Data Integrator", layout="wide")
-    # ... (생략: 사이드바 파일 업로드 로직) ...
+    
+    uploaded_file = st.sidebar.file_uploader("DB 파일을 업로드하세요 (.db)", type="db")
 
     if uploaded_file:
         # 파일 저장 로직
